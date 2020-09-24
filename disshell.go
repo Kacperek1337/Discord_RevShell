@@ -48,28 +48,24 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	mSplit := strings.Split(m.Content, " ")
-	mSplitLen := len(mSplit)
-
-	if mSplitLen > 1 && mSplit[0] == "cd" {
-
-		temp, _ := filepath.Abs(strings.Join(mSplit[1:], " "))
-		os.Chdir(temp)
-		return
-
-	} else if mSplitLen > 1 && mSplit[0] == "download" {
-
-		filePath := strings.Join(mSplit[1:], " ")
-		fileName := filepath.Base(filePath)
-		file, err := os.Open(filePath)
-		if err != nil {
-			println(err.Error())
+	mSplit := strings.SplitN(m.Content, " ", 2)
+	if len(mSplit) > 1 {
+		switch mSplit[0] {
+		case "cd":
+			temp, _ := filepath.Abs(strings.Join(mSplit[1:], " "))
+			os.Chdir(temp)
+			return
+		case "download":
+			filePath := mSplit[1]
+			fileName := filepath.Base(filePath)
+			file, err := os.Open(filePath)
+			if err != nil {
+				println(err.Error())
+				return
+			}
+			s.ChannelFileSend(m.ChannelID, fileName, file)
 			return
 		}
-
-		s.ChannelFileSend(m.ChannelID, fileName, file)
-		return
-
 	}
 
 	for _, attachment := range m.Attachments {
